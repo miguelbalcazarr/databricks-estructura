@@ -1,5 +1,5 @@
 import sys
-from env_utils import get_env, get_scope
+from .env_utils import get_env, get_scope
 from databricks.sdk.runtime import *
 
 env = get_env()
