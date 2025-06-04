@@ -3,15 +3,15 @@ trigger:
     include:
       - main
       - uat
-      - develop
+      - dev
 
 variables:
   - name: ENV
     value: $[replace(variables['Build.SourceBranchName'], 'main', 'prd')]
   - name: ENV
-    value: $[replace(variables['ENV'], 'uat', 'sandbox')]
+    value: $[replace(variables['ENV'], 'uat', 'uat')]
   - name: ENV
-    value: $[replace(variables['ENV'], 'develop', 'dev')]
+    value: $[replace(variables['ENV'], 'dev', 'dev')]
 
 stages:
   - stage: Deploy
