@@ -19,3 +19,6 @@ def get_env() -> dict:
 
 def get_scope(key="databricks") -> str:
     return get_env()["scopes"][key]
+    
+
+__all__ = ["get_env", "get_scope"]

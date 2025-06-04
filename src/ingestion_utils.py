@@ -6,3 +6,5 @@ def segunda_funcion() -> str:
 
 def tercera_funcion() -> str:
     return "tercera funcion"
+
+__all__ = ["primera_funcion", "segunda_funcion", "tercera_funcion"]

@@ -10,3 +10,5 @@ storage_account = dbutils.secrets.get(scope, "secret-env-storage-account")
 environment = dbutils.secrets.get(scope, "secret-env-environment")
 path_base = f"abfss://{container}@{storage_account}.dfs.core.windows.net/{environment}"
 catalog = "desarrollo"
+
+__all__ = ["env", "scope", "container", "storage_account", "environment", "path_base", "catalog"]
