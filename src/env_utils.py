@@ -1,25 +1,21 @@
+import os
+import json
 from databricks.sdk.runtime import dbutils
-import os, json
 
 def get_env_path() -> str:
     notebook_path = dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get()
 
     if notebook_path.startswith("/Repos/"):
-        base_path = "/".join(notebook_path.split("/")[:4])
+        base_path = "/Workspace" + notebook_path.split("/notebooks")[0]  # full workspace path
+        return os.path.join(base_path, "config", "env.json")
     else:
-        base_path = "/".join(notebook_path.split("/")[:3])
+        base_path = "/Workspace" + "/".join(notebook_path.split("/")[:3])
+        return os.path.join(base_path, "databricks-estructura", "config", "env.json")
 
-    return f"file:{base_path}/config/env.json"
-
-# def get_env() -> dict:
-#     env_path = get_env_path()
-#     with open(env_path) as f:
-#         return json.load(f)
-    
 def get_env() -> dict:
     env_path = get_env_path()
-    json_str = dbutils.fs.head(env_path, 4096)
-    return json.loads(json_str)
+    with open(env_path, "r") as f:
+        return json.load(f)
 
 def get_scope(key: str) -> str:
     return get_env()["scopes"][key]
