@@ -1,6 +1,7 @@
 import json
 import os
 from pathlib import Path
+from databricks.sdk.runtime import *
 
 def get_env_path() -> str:
     notebook_path = dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get()
