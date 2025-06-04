@@ -1,0 +1,23 @@
+trigger:
+  branches:
+    include:
+      - main
+      - uat
+      - develop
+
+variables:
+  - name: ENV
+    value: $[replace(variables['Build.SourceBranchName'], 'main', 'prd')]
+  - name: ENV
+    value: $[replace(variables['ENV'], 'uat', 'sandbox')]
+  - name: ENV
+    value: $[replace(variables['ENV'], 'develop', 'dev')]
+
+stages:
+  - stage: Deploy
+    jobs:
+      - job: DeployNotebook
+        steps:
+          - template: templates/deploy-job.yml
+            parameters:
+              env: $(ENV)
