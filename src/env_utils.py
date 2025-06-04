@@ -17,5 +17,5 @@ def get_env() -> dict:
     with open(env_path, "r") as f:
         return json.load(f)
 
-def get_scope(key: str) -> str:
+def get_scope(key="databricks") -> str:
     return get_env()["scopes"][key]
