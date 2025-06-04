@@ -11,10 +11,15 @@ def get_env_path() -> str:
 
     return f"{base_path}/config/env.json"
 
+# def get_env() -> dict:
+#     env_path = get_env_path()
+#     with open(env_path) as f:
+#         return json.load(f)
+    
 def get_env() -> dict:
     env_path = get_env_path()
-    with open(env_path) as f:
-        return json.load(f)
+    json_str = dbutils.fs.head(env_path, 4096)
+    return json.loads(json_str)
 
 def get_scope(key: str) -> str:
     return get_env()["scopes"][key]
