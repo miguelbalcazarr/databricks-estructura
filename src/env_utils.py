@@ -3,13 +3,13 @@ import os, json
 
 def get_env_path() -> str:
     notebook_path = dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get()
-    
-    if notebook_path.startswith("/Repos/"):
-        base_path = "/".join(notebook_path.split("/")[:4])  # /Repos/<user>/<repo>
-    else:
-        base_path = "/".join(notebook_path.split("/")[:3])  # /Workspace/Users/<user>
 
-    return f"{base_path}/config/env.json"
+    if notebook_path.startswith("/Repos/"):
+        base_path = "/".join(notebook_path.split("/")[:4])
+    else:
+        base_path = "/".join(notebook_path.split("/")[:3])
+
+    return f"file:{base_path}/config/env.json"
 
 # def get_env() -> dict:
 #     env_path = get_env_path()
