@@ -1,101 +1,104 @@
 
 # 🧱 Proyecto Base: Datalakehouse en Azure Databricks
 
-Este repositorio contiene la estructura inicial para un proyecto de arquitectura *Datalakehouse* en Azure Databricks, organizada bajo principios modulares y buenas prácticas de ingeniería de datos.
+Este repositorio define una arquitectura base para implementar proyectos Datalakehouse sobre Azure Databricks, con enfoque modular por dominio, separación de ambientes, y buenas prácticas de desarrollo y orquestación.
 
 ---
 
-## 📁 Estructura del Proyecto
+## 📐 Arquitectura de Carpetas
 
 ```
-├── .azure-pipelines
+├── .azure-pipelines/
 │   └── pipeline.yml
 ├── .gitignore
 ├── README.md
-├── config
-│   └── env.json
-├── notebooks
+├── notebooks/
 │   ├── bootstrap.ipynb
-│   └── ingestion
-│       └── dominio
-│           ├── arquetipos
+│   └── ingestion/
+│       └── dominio_1/
+│           ├── arquetipos/
 │           │   └── ntb_arquetipo.ipynb
-│           ├── bronze
+│           ├── bronze/
 │           │   └── ntb_bronze.ipynb
-│           ├── gold
+│           ├── gold/
 │           │   └── ntb_gold.ipynb
-│           └── silver
+│           └── silver/
 │               └── ntb_silver.ipynb
 ├── requirements.txt
-└── src
+└── src/
     ├── __init__.py
-    ├── env_utils.py
-    ├── ingestion_utils.py
-    └── init_env.py
+    ├── common/
+    │   ├── __init__.py
+    │   ├── env_utils.py
+    │   └── init_env.py
+    └── dominio_1/
+        ├── __init__.py
+        └── ingestion_utils.py
 ```
 
 ---
 
-## 📐 Arquitectura
+## ⚡️ Descripción General
 
-La solución está dividida en las siguientes capas:
+- **notebooks/**: Contiene notebooks organizados por dominio y capa del lakehouse (bronze, silver, gold, arquetipos).
+- **src/**: Código Python modularizado por dominio, con un espacio `common/` para utilidades globales y un submódulo por cada dominio de negocio.
+- **requirements.txt**: Dependencias Python del proyecto.
+- **.azure-pipelines/**: Definiciones de CI/CD para Azure DevOps.
+- **README.md**: Este documento.
+- **.gitignore**: Ignora archivos temporales y sensibles.
 
-- **Bronze**: Ingesta cruda de datos desde fuentes externas.
-- **Silver**: Transformaciones estructuradas y limpieza.
-- **Gold**: Datos listos para consumo analítico o exposición a negocio.
+---
 
-Los notebooks están organizados bajo el directorio `notebooks/ingestion/dominio/` según su capa y dominio lógico.
+## 🚀 Buenas Prácticas de Importación (Databricks)
+
+1. **Agrega `src/` al path en tu notebook**  
+   En cada notebook, al inicio, incluye:
+
+   ```python
+   %run ../../../bootstrap
+   ```
+
+2. **Importa solo lo que necesitas según el dominio**  
+   Ejemplo:
+
+   ```python
+   from common.env_utils import get_env
+   from dominio_1.ingestion_utils import funcion_critica
+   ```
+
+---
+
+## 🧩 Modularidad por Dominio
+
+- **common/**: Utilidades globales, helpers y funciones compartidas.
+- **dominio_xx/**: Lógica específica del dominio, por ejemplo reglas de negocio, funciones de ingesta, etc.
+- Puedes agregar más dominios en `src/` siguiendo este patrón:  
+  `src/dominio_clientes/`, `src/dominio_productos/`, etc.
 
 ---
 
 ## ⚙️ Requisitos Previos
 
 - Azure Databricks (workspace configurado)
-- Azure Data Lake Storage (montado como volume o acceso vía SAS/credential passthrough)
 - Python 3.9+
-- Bibliotecas listadas en `requirements.txt`
+- Azure DevOps (para CI/CD, opcional)
+- Las dependencias listadas en `requirements.txt`
 
 ---
 
-## 🔧 Configuración
+## 🛠️ Configuración recomendada
 
-1. Clona este repositorio:
-   ```bash
-   git clone https://github.com/tuusuario/databricks-estructura.git
-   ```
-
-2. Ajusta las variables de entorno en `config/env.json`.
-
-3. Importa los notebooks al workspace de Databricks.
-
-4. Ejecuta el notebook `notebooks/bootstrap.ipynb` para inicializar el entorno.
+1. **Clona este repositorio** en tu entorno Databricks.
+2. **Asegúrate de tener tu cluster con Python 3.9+**.
+3. **Instala las dependencias** si usas entorno local.
+4. **Orienta tu equipo a trabajar con notebooks organizados y modulares.**
 
 ---
 
-## 📓 Notebooks
+## 🔁 CI/CD
 
-| Notebook             | Descripción                                                  |
-|----------------------|--------------------------------------------------------------|
-| `ntb_arquetipo.ipynb`| Plantilla base para definir nuevas entidades.                |
-| `ntb_bronze.ipynb`   | Ingesta desde fuentes externas hacia la capa Bronze.         |
-| `ntb_silver.ipynb`   | Lógica de transformación y limpieza hacia Silver.            |
-| `ntb_gold.ipynb`     | Cálculo de métricas y agregaciones finales para la capa Gold.|
+- El pipeline de Azure DevOps en `.azure-pipelines/pipeline.yml` permite automatizar pruebas, despliegues o validaciones del código.
+- Puedes adaptar el pipeline para empaquetar el módulo `src/` como library (`.whl`) para su uso productivo.
 
 ---
 
-## 🧰 Scripts
-
-Los scripts en `src/` permiten configurar el entorno e implementar funciones comunes:
-
-- `init_env.py`: Inicialización del contexto de ejecución.
-- `env_utils.py`: Lectura y gestión de variables de entorno.
-- `ingestion_utils.py`: Funciones auxiliares para ingesta y trazabilidad.
-
----
-
-## 🚀 CI/CD
-
-Incluye una definición base para automatización en Azure DevOps:  
-`.azure-pipelines/pipeline.yml`, adaptable a tus flujos de trabajo.
-
----
