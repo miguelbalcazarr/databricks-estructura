@@ -1,5 +1,7 @@
+from .init_env import path_base
+
 def primera_funcion() -> str:
-    return "primera funcion"
+    return path_base
 
 def segunda_funcion() -> str:
     return "segunda funcion"
