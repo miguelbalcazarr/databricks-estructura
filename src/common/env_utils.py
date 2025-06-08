@@ -4,7 +4,7 @@ def get_env() -> str:
     """
     Devuelve el nombre del entorno (dev, uat, prd) desde una variable de entorno.
     """
-    return os.getenv("ENV", "prd")  # "prd" es el valor por defecto
+    return os.getenv("ENV", "desarrollo")  # "prd" es el valor por defecto
 
 def get_scope(key: str = "databricks") -> str:
     """

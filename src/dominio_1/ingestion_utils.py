@@ -1,4 +1,4 @@
-from .init_env import path_base
+from src.common.init_env import path_base
 
 def primera_funcion() -> str:
     return path_base
