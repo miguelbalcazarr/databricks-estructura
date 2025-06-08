@@ -1,24 +1,21 @@
 import os
-import json
-from databricks.sdk.runtime import dbutils
 
-def get_env_path() -> str:
-    notebook_path = dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get()
+def get_env() -> str:
+    """
+    Devuelve el nombre del entorno (dev, uat, prd) desde una variable de entorno.
+    """
+    return os.getenv("ENV", "prd")  # "prd" es el valor por defecto
 
-    if notebook_path.startswith("/Repos/"):
-        base_path = "/Workspace" + notebook_path.split("/notebooks")[0]  # full workspace path
-        return os.path.join(base_path, "config", "env.json")
-    else:
-        base_path = "/Workspace" + "/".join(notebook_path.split("/")[:3])
-        return os.path.join(base_path, "databricks-estructura", "config", "env.json")
-
-def get_env() -> dict:
-    env_path = get_env_path()
-    with open(env_path, "r") as f:
-        return json.load(f)
-
-def get_scope(key="databricks") -> str:
-    return get_env()["scopes"][key]
-    
+def get_scope(key: str = "databricks") -> str:
+    """
+    Devuelve el nombre del scope de Databricks desde una variable de entorno.
+    """
+    scopes = {
+        "desarrollo": {"databricks": "scope-dev"},
+        "calidad": {"databricks": "scope-uat"},
+        "produccion": {"databricks": "scope-prd"}
+    }
+    env = get_env()
+    return scopes.get(env, scopes[env]).get(key)
 
 __all__ = ["get_env", "get_scope"]
