@@ -1,55 +1,87 @@
-from pyspark.sql.types import (
-    StructType, StructField, IntegerType, LongType, ShortType, FloatType, DoubleType,
-    DecimalType, ByteType, StringType, BooleanType, DateType, TimestampType, BinaryType,
-    CharType, VarcharType
-)
-import re
+from .init_env import catalog
+from databricks.sdk.runtime import spark
 
-def to_struct_type(schema_json):
-    type_map = {
-        "integer": IntegerType(),
-        "int": IntegerType(),
-        "long": LongType(),
-        "bigint": LongType(),
-        "float": FloatType(),
-        "real": FloatType(),
-        "double": DoubleType(),
-        "string": StringType(),
-        "boolean": BooleanType(),
-        "date": DateType(),
-        "datetime": TimestampType(),
-        "timestamp": TimestampType(),
-        "timestamp_ltz": TimestampType(),
-        "binary": BinaryType(),
-        "byte": ByteType(),
-        "tinyint": ByteType(),
-        "short": ShortType(),
-        "smallint": ShortType(),
-    }
-
-    def resolve_type(t):
-        t_lower = t.lower()
-        # decimal(x, y)
-        if t_lower.startswith("decimal"):
-            match = re.match(r"decimal\((\d+),\s*(\d+)\)", t_lower)
-            if match:
-                precision, scale = int(match.group(1)), int(match.group(2))
-                return DecimalType(precision, scale)
-            else:
-                return DecimalType(38, 18)
-        # char(n), varchar(n): mapear a StringType()
-        elif t_lower.startswith("char") or t_lower.startswith("varchar"):
-            return StringType()
+def schema_to_sql(schema_json):
+    """
+    Convierte el schema JSON a una definición SQL compatible con CREATE TABLE,
+    incluyendo tipos, nullabilidad y comentarios por columna.
+    """
+    def type_to_sql(col_type):
+        t = col_type.lower()
+        if t.startswith("decimal"):
+            return t.replace(" ", "").upper()
+        elif t.startswith("varchar"):
+            return t.replace(" ", "").upper()
+        elif t.startswith("char"):
+            return t.replace(" ", "").upper()
+        elif t in ["integer", "int"]:
+            return "INT"
+        elif t == "long":
+            return "BIGINT"
+        elif t == "double":
+            return "DOUBLE"
+        elif t == "float":
+            return "FLOAT"
+        elif t == "string":
+            return "STRING"
+        elif t == "boolean":
+            return "BOOLEAN"
+        elif t in ["date"]:
+            return "DATE"
+        elif t in ["datetime", "timestamp"]:
+            return "TIMESTAMP"
         else:
-            dtype = type_map.get(t_lower)
-            if dtype is None:
-                raise ValueError(f"Tipo de dato no soportado: {t}")
-            return dtype
+            return t.upper()
 
-    fields = [
-        StructField(col["name"], resolve_type(col["type"]), col["nullable"])
-        for col in schema_json
-    ]
-    return StructType(fields)
+    cols = []
+    for col in schema_json:
+        line = f"{col['name']} {type_to_sql(col['type'])}"
+        line += " NOT NULL" if not col.get("nullable", True) else ""
+        if col.get("comment"):
+            line += f" COMMENT '{col['comment']}'"
+        cols.append(line)
+    return ",\n    ".join(cols)
 
-__all__ = ["to_struct_type"]
+def create_table(
+    database_name: str,
+    table_name: str,
+    table_schema: str,
+    table_location: str,
+    table_comment: str,
+    partition=None,
+    primary_key=None
+):
+    sql_query = f"""
+    CREATE TABLE IF NOT EXISTS {catalog}.{database_name}.{table_name}
+    ({table_schema}
+    """
+
+    if primary_key:
+        sql_query += f", PRIMARY KEY ({primary_key})"
+
+    sql_query += f"""
+    )
+    USING DELTA
+    LOCATION '{table_location}'
+    COMMENT '{table_comment}'
+    """
+
+    if partition:
+        sql_query += f"PARTITIONED BY ({partition})"
+
+    sql_query += """
+    TBLPROPERTIES (
+        'delta.autoOptimize.optimizeWrite' = 'True',
+        'delta.tuneFileSizesForRewrites' = 'True',
+        'delta.autoOptimize.autoCompact' = 'True',
+        'vorder.enabled' = 'True'
+    )
+    """
+
+    spark.sql(sql_query)
+    
+    print(f"Tabla {catalog}.{database_name}.{table_name} creada.")
+
+
+__all__ = ["schema_to_sql", "create_table"]
+

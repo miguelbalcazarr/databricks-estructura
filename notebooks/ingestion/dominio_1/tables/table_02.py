@@ -12,11 +12,13 @@ def get_table_info():
             {"name": "importe", "type": "decimal(18,4)", "nullable": False, "comment": "Monto de la venta"},
             {"name": "importe2", "type": "long", "nullable": True, "comment": "Monto de la venta"},
             {"name": "importe3", "type": "tinyint", "nullable": True, "comment": "Monto de la venta"},
-            {"name": "fecha", "type": "datetime", "nullable": False, "comment": "Fecha de la transacción"},
+            {"name": "fecha", "type": "date", "nullable": False, "comment": "Fecha de la transacción"},
             {"name": "producto", "type": "string", "nullable": False, "comment": "Nombre del producto"},
             {"name": "producto1", "type": "varchar(255)", "nullable": False, "comment": "Nombre del producto"},
             {"name": "producto2", "type": "char(5)", "nullable": False, "comment": "Nombre del producto"}
         ],
+        "primary_key": ["id"],
+        "partition_by": ["fecha"],
         "owner": "miguel.balcazar@kyndryl.com",
         "description": "Tabla bronze de dominio_1 (table_02) con datos crudos."
     }
