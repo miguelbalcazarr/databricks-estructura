@@ -5,35 +5,38 @@ Este repositorio define una arquitectura base para implementar proyectos Datalak
 
 ---
 
-## 📐 Arquitectura de Carpetas
+## 📦 **Estructura del Proyecto**
 
-```
+```text
+databricks-estructura-main/
 ├── .azure-pipelines/
-│   └── pipeline.yml
-├── .gitignore
-├── README.md
 ├── notebooks/
-│   ├── bootstrap.ipynb
 │   └── ingestion/
 │       └── dominio_1/
 │           ├── arquetipos/
 │           │   └── ntb_arquetipo.ipynb
 │           ├── bronze/
-│           │   └── ntb_bronze.ipynb
+│           │   ├── ntb_bronze.ipynb
+│           │   └── ntb_create_tables.ipynb
 │           ├── gold/
 │           │   └── ntb_gold.ipynb
-│           └── silver/
-│               └── ntb_silver.ipynb
+│           ├── silver/
+│           │   └── ntb_silver.ipynb
+│           ├── tables/
+│           │   ├── table_01.py
+│           │   └── table_02.py
+│           └── test/
+│               ├── test_business_rules.py
+│               └── test_quality.py
+├── src/
+│   ├── common/
+│   │   ├── env_utils.py
+│   │   ├── init_env.py
+│   │   └── init_tables.py
+│   └── dominio_1/
+│       └── ingestion_utils.py
 ├── requirements.txt
-└── src/
-    ├── __init__.py
-    ├── common/
-    │   ├── __init__.py
-    │   ├── env_utils.py
-    │   └── init_env.py
-    └── dominio_1/
-        ├── __init__.py
-        └── ingestion_utils.py
+└── README.md
 ```
 
 ---
@@ -49,31 +52,13 @@ Este repositorio define una arquitectura base para implementar proyectos Datalak
 
 ---
 
-## 🚀 Buenas Prácticas de Importación (Databricks)
+## 📐 **Principios y Arquitectura**
 
-1. **Agrega `src/` al path en tu notebook**  
-   En cada notebook, al inicio, incluye:
-
-   ```python
-   %run ../../../bootstrap
-   ```
-
-2. **Importa solo lo que necesitas según el dominio**  
-   Ejemplo:
-
-   ```python
-   from common.env_utils import get_env
-   from dominio_1.ingestion_utils import funcion_critica
-   ```
-
----
-
-## 🧩 Modularidad por Dominio
-
-- **common/**: Utilidades globales, helpers y funciones compartidas.
-- **dominio_xx/**: Lógica específica del dominio, por ejemplo reglas de negocio, funciones de ingesta, etc.
-- Puedes agregar más dominios en `src/` siguiendo este patrón:  
-  `src/dominio_clientes/`, `src/dominio_productos/`, etc.
+- **Modularidad:** Cada dominio de negocio tiene sus notebooks, scripts y definición de tablas centralizados.
+- **Gobernanza de datos:** Los schemas de cada tabla se definen en Python, con soporte a tipos, PK, particiones, comentarios y nullability.
+- **SQL-first:** Las tablas Delta se crean vía `CREATE TABLE ...` usando el esquema y metadatos centralizados, asegurando PK, nulls y particiones desde el catálogo.
+- **Orquestación automatizada:** Los notebooks pueden iterar sobre todos los esquemas definidos y crear tablas, comentarios, constraints y particiones de forma robusta.
+- **Testing:** Pruebas de calidad y reglas de negocio por dominio.
 
 ---
 
@@ -86,12 +71,70 @@ Este repositorio define una arquitectura base para implementar proyectos Datalak
 
 ---
 
-## 🛠️ Configuración recomendada
+## 🔧 **Configuración y Primeros Pasos**
 
-1. **Clona este repositorio** en tu entorno Databricks.
-2. **Asegúrate de tener tu cluster con Python 3.9+**.
-3. **Instala las dependencias** si usas entorno local.
-4. **Orienta tu equipo a trabajar con notebooks organizados y modulares.**
+1. **Clona el repositorio:**
+   ```bash
+   git clone https://github.com/tuusuario/databricks-estructura.git
+   ```
+
+2. **Configura tus variables de entorno**  
+   Edita `src/common/init_env.py` según tu ambiente o usa variables de entorno Databricks para la conexión.
+
+3. **Define/ajusta tus tablas:**  
+   En `notebooks/ingestion/dominio_x/tables/table_XX.py` define cada tabla, ejemplo:
+
+   ```python
+   def get_table_info():
+       return {
+           "schema": [
+               {"name": "id", "type": "integer", "nullable": False, "comment": "ID único"},
+               {"name": "fecha", "type": "date", "nullable": False},
+               {"name": "importe", "type": "decimal(18,4)", "nullable": False, "comment": "Importe de la venta"}
+           ],
+           "primary_key": ["id"],
+           "partition_by": ["fecha"],
+           "description": "Tabla bronze de ventas por fecha."
+       }
+   ```
+
+4. **Ejecuta el notebook de creación de tablas:**  
+   Abre y ejecuta `notebooks/ingestion/dominio_x/bronze/ntb_create_tables.ipynb`.  
+   Este notebook, usando helpers como `schema_to_sql` y `create_table`, crea y documenta todas las tablas a partir de los esquemas modulares.
+
+---
+
+## ✅ **Buenas Prácticas de Importación (Databricks)**
+
+- **Agrega `src/` al `sys.path` de tu notebook**  
+  Esto asegura que puedes importar tus módulos Python personalizados desde cualquier notebook.
+
+- **Usa el bootstrap para inicializar rutas y contexto**  
+  Al inicio de cada notebook, ejecuta:
+
+  ```python
+  %run ../../../bootstrap
+  ```
+
+  Esto añade automáticamente el directorio `src/` al path de Python y prepara el entorno.
+
+- **Importa solo lo necesario según el dominio**
+  - Así mantienes tu código claro y modular.
+  - Ejemplo recomendado en tu notebook:
+    ```python
+    from common.env_utils import get_env
+    from dominio_1.ingestion_utils import funcion_critica
+    ```
+
+- **Evita imports globales o comodines (no uses `from src.* import *`)**
+  - Solo importa las funciones, clases o utilidades que realmente necesitas para el notebook/domino en cuestión.
+
+---
+
+## 📝 **Testing de calidad y reglas de negocio**
+
+- Coloca tus notebooks y scripts de pruebas en `notebooks/ingestion/dominio_x/test/`
+- Recomendado: usar [Great Expectations](https://greatexpectations.io/) o pruebas personalizadas en PySpark.
 
 ---
 
