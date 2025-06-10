@@ -1,4 +1,4 @@
-from common.init_env import path_base, catalog
+from src.common.init_env import path_base, catalog
 
 def get_table_info():
     info = {
